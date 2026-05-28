@@ -1,7 +1,7 @@
 services:
   # Flask Backend Web Service
   - type: web
-    name: stock-portfolio-backend
+    name: codealpha-stock-portfolio-backend
     runtime: python
     buildCommand: pip install -r backend/requirements.txt
     startCommand: gunicorn --directory backend app:app
@@ -13,13 +13,13 @@ services:
 
   # React Frontend Static Site
   - type: web
-    name: stock-portfolio-frontend
+    name: codealpha-stock-portfolio-frontend
     runtime: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
         fromService:
-          name: stock-portfolio-backend
+          name: codealpha-stock-portfolio-backend
           type: web
           property: host
