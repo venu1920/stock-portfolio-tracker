@@ -1,0 +1,20 @@
+# Python
+backend/__pycache__/
+backend/*.pyc
+backend/*.pyo
+backend/*.pyd
+backend/*.db
+backend/.venv/
+backend/instance/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+
+# OS/IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

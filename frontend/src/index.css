@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans bg-slate-50 text-slate-900 transition-colors duration-300;
+  }
+  
+  body.dark {
+    @apply bg-slate-950 text-slate-50;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300/80 rounded-full hover:bg-slate-400 dark:bg-slate-800/80 dark:hover:bg-slate-700;
+}
+
+/* Premium Styles */
+.glass-panel {
+  @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-white/20 dark:border-slate-800/30 shadow-sm rounded-2xl;
+}
+
+.glass-panel-hover {
+  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:bg-white/80 hover:border-indigo-500/10 dark:hover:bg-slate-900/80 dark:hover:border-indigo-500/20;
+}
+
+.gradient-mesh {
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(225,39%,30%,0.05) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(339,49%,30%,0.03) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(217,91%,60%,0.04) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(256,92%,63%,0.03) 0, transparent 50%);
+}
+
+.dark .gradient-mesh {
+  background-color: #020617;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(253,16%,7%,0.3) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(339,49%,30%,0.15) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(217,91%,60%,0.15) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(256,92%,63%,0.1) 0, transparent 50%);
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400;
+}
+
+.btn-primary {
+  @apply relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform active:scale-95;
+}
+
+.btn-secondary {
+  @apply border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium px-5 py-2.5 rounded-xl transition-all duration-300 transform active:scale-95;
+}
+
+/* Stock Cell Updates Animations */
+@keyframes flashGreen {
+  0% { background-color: rgba(16, 185, 129, 0.4); }
+  100% { background-color: transparent; }
+}
+
+@keyframes flashRed {
+  0% { background-color: rgba(239, 68, 68, 0.4); }
+  100% { background-color: transparent; }
+}
+
+.animate-flash-green {
+  animation: flashGreen 1.5s ease-out;
+}
+
+.animate-flash-red {
+  animation: flashRed 1.5s ease-out;
+}
