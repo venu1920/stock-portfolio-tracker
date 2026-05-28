@@ -1,0 +1,25 @@
+services:
+  # Flask Backend Web Service
+  - type: web
+    name: stock-portfolio-backend
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn --directory backend app:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: DATABASE_URL
+        value: sqlite:///instance/portfolio.db
+
+  # React Frontend Static Site
+  - type: web
+    name: stock-portfolio-frontend
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    publishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: stock-portfolio-backend
+          type: web
+          property: url
