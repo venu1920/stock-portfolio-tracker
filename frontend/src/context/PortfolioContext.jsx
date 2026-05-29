@@ -11,6 +11,11 @@ export const PortfolioProvider = ({ children }) => {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [notifications, setNotifications] = useState([]);
   const [flashStates, setFlashStates] = useState({}); // { stockId: 'up' | 'down' }
+  const [activeMode, setActiveMode] = useState(localStorage.getItem('activeMode') || 'practice');
+
+  useEffect(() => {
+    localStorage.setItem('activeMode', activeMode);
+  }, [activeMode]);
 
   // Apply theme
   useEffect(() => {
@@ -117,7 +122,8 @@ export const PortfolioProvider = ({ children }) => {
   // Stock CRUD
   const addStock = async (stockData) => {
     try {
-      const response = await stockService.add(stockData);
+      const payload = { ...stockData, is_real: activeMode === 'real' };
+      const response = await stockService.add(payload);
       setStocks((prev) => [...prev, response.stock]);
       setUser(response.user);
       addNotification(`Added ${response.stock.stock_symbol} to portfolio.`, 'success');
@@ -228,7 +234,7 @@ export const PortfolioProvider = ({ children }) => {
   // Export handlers
   const exportCSV = async () => {
     try {
-      await stockService.downloadCSV();
+      await stockService.downloadCSV(activeMode === 'real');
       addNotification('CSV exported and download started.', 'success');
     } catch (error) {
       addNotification('Failed to export CSV.', 'error');
@@ -237,10 +243,22 @@ export const PortfolioProvider = ({ children }) => {
 
   const exportPDF = async () => {
     try {
-      await stockService.downloadPDF();
+      await stockService.downloadPDF(activeMode === 'real');
       addNotification('PDF exported and download started.', 'success');
     } catch (error) {
       addNotification('Failed to export PDF.', 'error');
+    }
+  };
+
+  const addFunds = async (amount, paymentMethod) => {
+    try {
+      const response = await authService.addFunds(amount, paymentMethod);
+      setUser(response.user);
+      addNotification(`Successfully added $${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })} to your Real Wallet!`, 'success');
+    } catch (error) {
+      const errMsg = error.response?.data?.error || 'Failed to add funds';
+      addNotification(errMsg, 'error');
+      throw new Error(errMsg);
     }
   };
 
@@ -271,7 +289,10 @@ export const PortfolioProvider = ({ children }) => {
         exportPDF,
         toggleTheme,
         addNotification,
-        resetDemo
+        resetDemo,
+        activeMode,
+        setActiveMode,
+        addFunds
       }}
     >
       {children}

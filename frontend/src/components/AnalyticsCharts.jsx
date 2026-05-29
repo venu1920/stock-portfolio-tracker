@@ -8,7 +8,12 @@ import {
 } from 'recharts';
 
 const AnalyticsCharts = () => {
-  const { stocks } = usePortfolio();
+  const { stocks, activeMode } = usePortfolio();
+
+  // Filter stocks by activeMode
+  const filteredStocks = useMemo(() => {
+    return stocks.filter((s) => s.is_real === (activeMode === 'real'));
+  }, [stocks, activeMode]);
 
   // Premium colors
   const COLORS = [
@@ -23,27 +28,27 @@ const AnalyticsCharts = () => {
 
   // 1. Pie Chart Allocation Data
   const pieData = useMemo(() => {
-    if (stocks.length === 0) return [];
-    return stocks.map((s) => ({
+    if (filteredStocks.length === 0) return [];
+    return filteredStocks.map((s) => ({
       name: s.stock_symbol,
       value: s.current_value
     }));
-  }, [stocks]);
+  }, [filteredStocks]);
 
   // 2. Bar Chart Investment vs Valuation Data
   const barData = useMemo(() => {
-    if (stocks.length === 0) return [];
-    return stocks.map((s) => ({
+    if (filteredStocks.length === 0) return [];
+    return filteredStocks.map((s) => ({
       name: s.stock_symbol,
       Investment: s.total_investment,
       Valuation: s.current_value
     }));
-  }, [stocks]);
+  }, [filteredStocks]);
 
   // 3. Area Chart Weekly Growth Curve Simulation
   const growthData = useMemo(() => {
-    const totalVal = stocks.reduce((sum, s) => sum + s.current_value, 0);
-    const totalInv = stocks.reduce((sum, s) => sum + s.total_investment, 0);
+    const totalVal = filteredStocks.reduce((sum, s) => sum + s.current_value, 0);
+    const totalInv = filteredStocks.reduce((sum, s) => sum + s.total_investment, 0);
 
     const baseValue = totalInv > 0 ? totalInv : 10000;
     const targetValue = totalVal > 0 ? totalVal : 11200;
@@ -62,7 +67,7 @@ const AnalyticsCharts = () => {
       });
     }
     return data;
-  }, [stocks]);
+  }, [filteredStocks]);
 
   // Custom tooltips for premium styling
   const CustomTooltip = ({ active, payload, label }) => {
@@ -82,9 +87,9 @@ const AnalyticsCharts = () => {
     return null;
   };
 
-  if (stocks.length === 0) {
+  if (filteredStocks.length === 0) {
     return (
-      <div className="glass-panel p-10 text-center flex flex-col items-center justify-center min-h-[300px] border-dashed border-slate-300 dark:border-slate-850">
+      <div className="glass-panel p-10 text-center flex flex-col items-center justify-center min-h-[300px] border-dashed border-slate-300 dark:border-slate-800">
         <p className="text-slate-400 text-sm font-medium">Add stocks to generate analytics charts</p>
       </div>
     );
@@ -97,9 +102,9 @@ const AnalyticsCharts = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Growth Curve */}
-        <div className="lg:col-span-2 glass-panel p-5 bg-white/70 dark:bg-slate-900/70 border border-slate-205 dark:border-slate-805">
+        <div className="lg:col-span-2 glass-panel p-5 bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
           <div className="mb-4">
-            <h3 className="font-extrabold text-sm text-slate-850 dark:text-white">Portfolio Growth Simulation</h3>
+            <h3 className="font-extrabold text-sm text-slate-800 dark:text-white">Portfolio Growth Simulation</h3>
             <p className="text-[10px] text-slate-500">Estimated valuation curve over the past 7 calendar days</p>
           </div>
           <div className="h-64 w-full">
@@ -122,9 +127,9 @@ const AnalyticsCharts = () => {
         </div>
 
         {/* Portfolio Distribution Pie */}
-        <div className="glass-panel p-5 bg-white/70 dark:bg-slate-900/70 border border-slate-205 dark:border-slate-805">
+        <div className="glass-panel p-5 bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
           <div className="mb-4">
-            <h3 className="font-extrabold text-sm text-slate-850 dark:text-white">Holdings Allocation</h3>
+            <h3 className="font-extrabold text-sm text-slate-800 dark:text-white">Holdings Allocation</h3>
             <p className="text-[10px] text-slate-500">Relative asset concentration percentages</p>
           </div>
           <div className="h-64 w-full relative flex items-center justify-center">
@@ -150,7 +155,7 @@ const AnalyticsCharts = () => {
             {/* Overlay Info inside donut */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span className="text-[10px] uppercase font-bold text-slate-400">Total Stocks</span>
-              <span className="text-xl font-black text-slate-800 dark:text-white">{stocks.length}</span>
+              <span className="text-xl font-black text-slate-800 dark:text-white">{filteredStocks.length}</span>
             </div>
           </div>
         </div>
@@ -158,9 +163,9 @@ const AnalyticsCharts = () => {
       </div>
 
       {/* Bar Chart: Investment vs Valuation */}
-      <div className="glass-panel p-5 bg-white/70 dark:bg-slate-900/70 border border-slate-205 dark:border-slate-805">
+      <div className="glass-panel p-5 bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
         <div className="mb-4">
-          <h3 className="font-extrabold text-sm text-slate-850 dark:text-white">Initial Investment vs. Market Valuation</h3>
+          <h3 className="font-extrabold text-sm text-slate-800 dark:text-white">Initial Investment vs. Market Valuation</h3>
           <p className="text-[10px] text-slate-500">Asset-by-asset comparison of capital purchase vs. current pricing value</p>
         </div>
         <div className="h-64 w-full">

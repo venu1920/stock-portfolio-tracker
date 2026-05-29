@@ -103,7 +103,7 @@ const AuthModal = ({ isOpen, onClose, defaultIsRegister = false }) => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter username"
-                className="w-full pl-9 pr-4 py-2.5 bg-slate-100/50 dark:bg-slate-850/50 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm transition-all focus:outline-none dark:text-white"
+                className="w-full pl-9 pr-4 py-2.5 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm transition-all focus:outline-none dark:text-white"
                 required
               />
             </div>
@@ -122,7 +122,7 @@ const AuthModal = ({ isOpen, onClose, defaultIsRegister = false }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={isRegister ? 'At least 6 characters' : 'Enter password'}
-                className="w-full pl-9 pr-4 py-2.5 bg-slate-100/50 dark:bg-slate-850/50 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm transition-all focus:outline-none dark:text-white"
+                className="w-full pl-9 pr-4 py-2.5 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm transition-all focus:outline-none dark:text-white"
                 required
               />
             </div>

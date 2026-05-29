@@ -4,19 +4,20 @@ import AddEditStockModal from '../components/AddEditStockModal';
 import AIDashboardInsights from '../components/AIDashboardInsights';
 import WatchlistWidget from '../components/WatchlistWidget';
 import AnalyticsCharts from '../components/AnalyticsCharts';
+import AddFundsModal from '../components/AddFundsModal';
 
 import { 
   LayoutDashboard, FolderClosed, BarChart4, Download, Settings as SettingsIcon,
   LogOut, Menu, Sun, Moon, Search, Bell, Star,
   TrendingUp, TrendingDown, Edit2, Trash2, Plus, 
-  ArrowUpDown, Play, Pause, AlertCircle, RefreshCw
+  ArrowUpDown, Play, Pause, AlertCircle, RefreshCw, X
 } from 'lucide-react';
 
 const DashboardPage = ({ onNavigateToLanding }) => {
   const { 
     user, stocks, theme, flashStates, logout, deleteStock,
     triggerSimulationTick, exportCSV, exportPDF, toggleTheme, addNotification,
-    resetDemo
+    resetDemo, activeMode, setActiveMode
   } = usePortfolio();
 
   const [activeMenu, setActiveMenu] = useState('dashboard');
@@ -29,6 +30,9 @@ const DashboardPage = ({ onNavigateToLanding }) => {
   
   // Delete confirmation modal state
   const [stockToDelete, setStockToDelete] = useState(null);
+
+  // Add Funds modal state
+  const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
 
   // Search, Filter & Sort states
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,8 +57,9 @@ const DashboardPage = ({ onNavigateToLanding }) => {
 
   // Overall Portfolio Calculations
   const summary = useMemo(() => {
-    const totalInvestment = stocks.reduce((sum, s) => sum + s.total_investment, 0);
-    const currentValue = stocks.reduce((sum, s) => sum + s.current_value, 0);
+    const filtered = stocks.filter(s => s.is_real === (activeMode === 'real'));
+    const totalInvestment = filtered.reduce((sum, s) => sum + s.total_investment, 0);
+    const currentValue = filtered.reduce((sum, s) => sum + s.current_value, 0);
     const totalPL = currentValue - totalInvestment;
     const plPercentage = totalInvestment > 0 ? (totalPL / totalInvestment) * 100 : 0;
     
@@ -63,9 +68,9 @@ const DashboardPage = ({ onNavigateToLanding }) => {
       currentValue,
       totalPL,
       plPercentage,
-      totalCount: stocks.length
+      totalCount: filtered.length
     };
-  }, [stocks]);
+  }, [stocks, activeMode]);
 
   // Handle Log Out
   const handleLogout = () => {
@@ -112,7 +117,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
 
   // Filtered & Sorted Stocks List
   const filteredSortedStocks = useMemo(() => {
-    let list = [...stocks];
+    let list = stocks.filter(s => s.is_real === (activeMode === 'real'));
 
     // 1. Search Query Filter
     if (searchQuery.trim()) {
@@ -166,7 +171,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
     });
 
     return list;
-  }, [stocks, searchQuery, gainsFilter, sortField, sortDirection]);
+  }, [stocks, searchQuery, gainsFilter, sortField, sortDirection, activeMode]);
 
   // Sidebar Items
   const sidebarItems = [
@@ -186,7 +191,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
       
       {/* Desktop Sidebar */}
       <aside 
-        className={`hidden md:flex flex-col flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-850 h-screen sticky top-0 transition-all duration-300 ${
+        className={`hidden md:flex flex-col flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800 h-screen sticky top-0 transition-all duration-300 ${
           sidebarCollapsed ? 'w-20' : 'w-64'
         }`}
       >
@@ -204,7 +209,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
           </div>
           <button 
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-650 dark:hover:text-slate-250 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
             title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
             <Menu className="w-4 h-4" />
@@ -223,10 +228,10 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group relative ${
                   isActive 
                     ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-600'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850 hover:text-slate-900 dark:hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <Icon className={`w-4.5 h-4.5 flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'}`} />
+                <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'}`} />
                 {!sidebarCollapsed && <span>{item.name}</span>}
                 {sidebarCollapsed && (
                   <div className="absolute left-16 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-md">
@@ -247,7 +252,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
               </div>
               <div className="overflow-hidden">
                 <p className="text-xs font-bold text-slate-800 dark:text-white truncate leading-none">{user?.username}</p>
-                <p className="text-[10px] text-slate-450 mt-1 truncate">Portfolio Auditor</p>
+                <p className="text-[10px] text-slate-400 mt-1 truncate">Portfolio Auditor</p>
               </div>
             </div>
           )}
@@ -291,10 +296,10 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                       isActive 
                         ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-600'
-                        : 'text-slate-655 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
-                    <Icon className="w-4.5 h-4.5" />
+                    <Icon className="w-5 h-5" />
                     <span>{item.name}</span>
                   </button>
                 );
@@ -328,9 +333,9 @@ const DashboardPage = ({ onNavigateToLanding }) => {
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setMobileSidebarOpen(true)}
-              className="md:hidden p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-450 hover:bg-slate-50 dark:hover:bg-slate-800"
+              className="md:hidden p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
-              <Menu className="w-4.5 h-4.5" />
+              <Menu className="w-5 h-5" />
             </button>
             
             {/* Search Bar for Dashboard Context */}
@@ -346,7 +351,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                   if (activeMenu !== 'portfolio') setActiveMenu('portfolio');
                 }}
                 placeholder="Search symbol, company..."
-                className="w-full pl-9 pr-3 py-1.5 bg-slate-100/50 dark:bg-slate-850/50 border border-slate-200/80 dark:border-slate-800 focus:border-indigo-500 rounded-xl text-xs transition-all focus:outline-none dark:text-white"
+                className="w-full pl-9 pr-3 py-1.5 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 focus:border-indigo-500 rounded-xl text-xs transition-all focus:outline-none dark:text-white"
               />
             </div>
           </div>
@@ -356,7 +361,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
             
             {/* Ticker Simulator Toggles */}
             {stocks.length > 0 && (
-              <div className="flex items-center gap-1 bg-slate-150/60 dark:bg-slate-850/60 border border-slate-205 dark:border-slate-805 p-1 rounded-xl">
+              <div className="flex items-center gap-1 bg-slate-100/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 p-1 rounded-xl">
                 <button
                   onClick={() => setIsSimulating(!isSimulating)}
                   className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors ${
@@ -380,6 +385,36 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                 </button>
               </div>
             )}
+
+            {/* Mode Toggle Switch */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200/60 dark:border-slate-700/50 shadow-inner">
+              <button
+                onClick={() => {
+                  setActiveMode('practice');
+                  addNotification('Switched to Practice Portfolio', 'info');
+                }}
+                className={`px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all duration-205 ${
+                  activeMode === 'practice'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                }`}
+              >
+                Practice
+              </button>
+              <button
+                onClick={() => {
+                  setActiveMode('real');
+                  addNotification('Switched to Real Portfolio', 'info');
+                }}
+                className={`px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all duration-205 flex items-center gap-1 ${
+                  activeMode === 'real'
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                }`}
+              >
+                Real
+              </button>
+            </div>
 
             {/* Theme Toggle */}
             <button
@@ -423,11 +458,26 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                   </div>
                 </div>
 
-                {/* 2. Practice Cash Card */}
+                {/* 2. Practice / Real Cash Card */}
                 <div className="glass-panel p-5 bg-gradient-to-tr from-emerald-500/10 to-transparent border-emerald-500/10 dark:border-emerald-500/20 transform hover:-translate-y-1 transition-all duration-300">
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Practice Cash</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                      {activeMode === 'real' ? 'Real Wallet Cash' : 'Practice Cash'}
+                    </p>
+                    {activeMode === 'real' && (
+                      <button
+                        onClick={() => setIsAddFundsOpen(true)}
+                        className="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition-all shadow-sm"
+                      >
+                        <Plus className="w-2.5 h-2.5" /> Add Cash
+                      </button>
+                    )}
+                  </div>
                   <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-2">
-                    ${(user?.demo_balance ?? 100000).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    $
+                    {activeMode === 'real'
+                      ? (user?.real_balance ?? 0.0).toLocaleString(undefined, { minimumFractionDigits: 2 })
+                      : (user?.demo_balance ?? 100000).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </h3>
                   <div className="mt-2.5 text-[10px] font-bold text-slate-500">
                     Buying Power
@@ -484,9 +534,9 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                 {/* AI Insights (Takes 2 cols on wide) */}
                 <div className="lg:col-span-2 space-y-6">
                   <AIDashboardInsights />
-                  <div className="glass-panel p-5 border border-slate-205 dark:border-slate-805">
+                  <div className="glass-panel p-5 border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
-                      <h3 className="font-extrabold text-sm text-slate-850 dark:text-white">Active Positions Summary</h3>
+                      <h3 className="font-extrabold text-sm text-slate-800 dark:text-white">Active Positions Summary</h3>
                       <button 
                         onClick={() => setActiveMenu('portfolio')}
                         className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 font-semibold"
@@ -494,34 +544,37 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                         View Table
                       </button>
                     </div>
-                    {stocks.length === 0 ? (
+                    {stocks.filter(s => s.is_real === (activeMode === 'real')).length === 0 ? (
                       <div className="text-center py-8">
-                        <p className="text-xs text-slate-450 font-medium">No stock holdings available. Click "Add Asset" to start.</p>
+                        <p className="text-xs text-slate-400 font-medium">No holdings available in this mode. Click "Add Asset" to start.</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {stocks.slice(0, 4).map((stock) => {
-                          const isGainer = stock.profit_loss >= 0;
-                          return (
-                            <div 
-                              key={stock.id}
-                              className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 flex items-center justify-between"
-                            >
-                              <div>
-                                <h4 className="font-bold text-xs text-slate-800 dark:text-white">{stock.stock_symbol}</h4>
-                                <p className="text-[9px] text-slate-400">{stock.company_name}</p>
+                        {stocks
+                          .filter(s => s.is_real === (activeMode === 'real'))
+                          .slice(0, 4)
+                          .map((stock) => {
+                            const isGainer = stock.profit_loss >= 0;
+                            return (
+                              <div 
+                                key={stock.id}
+                                className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 flex items-center justify-between"
+                              >
+                                <div>
+                                  <h4 className="font-bold text-xs text-slate-800 dark:text-white">{stock.stock_symbol}</h4>
+                                  <p className="text-[9px] text-slate-400">{stock.company_name}</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-bold text-xs">${stock.current_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                                  <span className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${
+                                    isGainer ? 'text-emerald-600' : 'text-rose-600'
+                                  }`}>
+                                    {isGainer ? '+' : ''}{stock.profit_loss_percentage.toFixed(1)}%
+                                  </span>
+                                </div>
                               </div>
-                              <div className="text-right">
-                                <p className="font-bold text-xs">${stock.current_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-                                <span className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${
-                                  isGainer ? 'text-emerald-600' : 'text-rose-600'
-                                }`}>
-                                  {isGainer ? '+' : ''}{stock.profit_loss_percentage.toFixed(1)}%
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
                       </div>
                     )}
                   </div>
@@ -544,7 +597,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
             <div className="space-y-6 animate-fade-in">
               
               {/* Toolbar: Search, Filters, Add Button */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-panel p-4 bg-white/70 dark:bg-slate-900/70 border border-slate-205 dark:border-slate-805">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-panel p-4 bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
                 
                 {/* Search query */}
                 <div className="relative w-full sm:w-64">
@@ -556,7 +609,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search stocks by symbol, name..."
-                    className="w-full pl-9 pr-3 py-2 bg-slate-100/50 dark:bg-slate-850/50 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl text-xs dark:text-white focus:outline-none"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl text-xs dark:text-white focus:outline-none"
                   />
                 </div>
 
@@ -567,7 +620,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                     className={`flex-1 sm:flex-initial text-xs font-semibold px-4 py-2 rounded-xl transition-all ${
                       gainsFilter === 'all'
                         ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-                        : 'border border-slate-200 dark:border-slate-850 hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-600 dark:text-slate-400'
+                        : 'border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     All holdings
@@ -577,7 +630,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                     className={`flex-1 sm:flex-initial text-xs font-semibold px-4 py-2 rounded-xl transition-all ${
                       gainsFilter === 'gainers'
                         ? 'bg-emerald-500 text-white shadow-sm'
-                        : 'border border-slate-200 dark:border-slate-850 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450'
+                        : 'border border-slate-200 dark:border-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
                     }`}
                   >
                     Gainers
@@ -587,7 +640,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                     className={`flex-1 sm:flex-initial text-xs font-semibold px-4 py-2 rounded-xl transition-all ${
                       gainsFilter === 'losers'
                         ? 'bg-rose-500 text-white shadow-sm'
-                        : 'border border-slate-200 dark:border-slate-850 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 dark:text-rose-450'
+                        : 'border border-slate-200 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-rose-600 dark:text-rose-400'
                     }`}
                   >
                     Losers
@@ -596,7 +649,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
               </div>
 
               {/* Table Wrapper */}
-              <div className="glass-panel border border-slate-205 dark:border-slate-805 overflow-hidden">
+              <div className="glass-panel border border-slate-200 dark:border-slate-800 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[800px] border-collapse text-left text-xs">
                     <thead>
@@ -622,10 +675,10 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                         <th className="px-5 py-4 text-center">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-150 dark:divide-slate-805">
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                       {filteredSortedStocks.length === 0 ? (
                         <tr>
-                          <td colSpan={9} className="text-center py-12 text-slate-450 font-medium">
+                          <td colSpan={9} className="text-center py-12 text-slate-400 font-medium">
                             {stocks.length === 0 
                               ? 'Your portfolio is empty. Click "Add Asset" to record holdings.'
                               : 'No holdings matched your search parameters.'}
@@ -646,10 +699,10 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                               key={stock.id} 
                               className={`hover:bg-slate-100/30 dark:hover:bg-slate-900/30 transition-all duration-300 ${flashClass}`}
                             >
-                              <td className="px-5 py-4.5 font-bold text-slate-850 dark:text-white">
+                              <td className="px-5 py-4.5 font-bold text-slate-800 dark:text-white">
                                 {stock.stock_symbol}
                               </td>
-                              <td className="px-5 py-4.5 font-medium text-slate-600 dark:text-slate-350">
+                              <td className="px-5 py-4.5 font-medium text-slate-600 dark:text-slate-300">
                                 {stock.company_name}
                               </td>
                               <td className="px-5 py-4.5 text-right font-medium">
@@ -664,7 +717,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                               <td className="px-5 py-4.5 text-right font-medium">
                                 ${stock.total_investment.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                               </td>
-                              <td className="px-5 py-4.5 text-right font-bold text-slate-850 dark:text-white">
+                              <td className="px-5 py-4.5 text-right font-bold text-slate-800 dark:text-white">
                                 ${stock.current_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                               </td>
                               <td className={`px-5 py-4.5 text-right font-bold flex items-center justify-end gap-1.5 ${
@@ -682,14 +735,14 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                                 <div className="flex items-center justify-center gap-1.5">
                                   <button
                                     onClick={() => handleOpenEditStock(stock)}
-                                    className="p-1.5 rounded-lg border border-transparent hover:border-slate-205 dark:hover:border-slate-805 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-600 transition-all"
+                                    className="p-1.5 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-600 transition-all"
                                     title="Edit"
                                   >
                                     <Edit2 className="w-3.5 h-3.5" />
                                   </button>
                                   <button
                                     onClick={() => handleConfirmDelete(stock)}
-                                    className="p-1.5 rounded-lg border border-transparent hover:border-slate-205 dark:hover:border-slate-805 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-rose-500 transition-all"
+                                    className="p-1.5 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-rose-500 transition-all"
                                     title="Delete"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -735,7 +788,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                 {/* CSV Download Card */}
                 <button
                   onClick={exportCSV}
-                  disabled={stocks.length === 0}
+                  disabled={stocks.filter(s => s.is_real === (activeMode === 'real')).length === 0}
                   className="glass-panel p-6 border-slate-200 dark:border-slate-800 flex flex-col items-center gap-3 transition-all duration-300 hover:shadow-md hover:border-indigo-500/20 disabled:opacity-50 disabled:pointer-events-none text-slate-800 dark:text-white"
                 >
                   <span className="font-extrabold text-sm">Download Spreadsheet (CSV)</span>
@@ -746,7 +799,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                 {/* PDF Download Card */}
                 <button
                   onClick={exportPDF}
-                  disabled={stocks.length === 0}
+                  disabled={stocks.filter(s => s.is_real === (activeMode === 'real')).length === 0}
                   className="glass-panel p-6 border-slate-200 dark:border-slate-800 flex flex-col items-center gap-3 transition-all duration-300 hover:shadow-md hover:border-indigo-500/20 disabled:opacity-50 disabled:pointer-events-none text-slate-800 dark:text-white"
                 >
                   <span className="font-extrabold text-sm">Download PDF Report</span>
@@ -764,11 +817,11 @@ const DashboardPage = ({ onNavigateToLanding }) => {
           {activeMenu === 'settings' && (
             <div className="space-y-6 animate-fade-in max-w-2xl">
               
-              <div className="glass-panel p-5 bg-white/70 dark:bg-slate-900/70 border border-slate-205 dark:border-slate-805 space-y-6">
+              <div className="glass-panel p-5 bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 space-y-6">
                 
                 {/* Section header */}
                 <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <h3 className="font-bold text-sm text-slate-850 dark:text-white">Workspace Configuration</h3>
+                  <h3 className="font-bold text-sm text-slate-800 dark:text-white">Workspace Configuration</h3>
                   <p className="text-[10px] text-slate-500">Configure simulated parameters and account preferences</p>
                 </div>
 
@@ -779,7 +832,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/30 rounded-xl">
                     <div>
                       <h4 className="font-bold text-slate-800 dark:text-white">Simulated Live Price Refresh</h4>
-                      <p className="text-[10px] text-slate-450 leading-relaxed mt-0.5">Toggle background fluctuation of market prices (-1.5% to +1.5% ticks).</p>
+                      <p className="text-[10px] text-slate-400 leading-relaxed mt-0.5">Toggle background fluctuation of market prices (-1.5% to +1.5% ticks).</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <select
@@ -799,7 +852,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                         className={`px-4 py-1.5 rounded-xl font-bold transition-all ${
                           isSimulating 
                             ? 'bg-emerald-500 text-white shadow-sm' 
-                            : 'border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-350'
+                            : 'border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         {isSimulating ? 'Active' : 'Disabled'}
@@ -814,7 +867,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                       <input
                         type="text"
                         value="Intern Stock Auditor"
-                        className="w-full px-3 py-2 bg-slate-100/50 dark:bg-slate-850/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-450 select-none pointer-events-none"
+                        className="w-full px-3 py-2 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400 select-none pointer-events-none"
                         readOnly
                       />
                     </div>
@@ -823,7 +876,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                       <input
                         type="text"
                         value="SQLite Instance (local_db.db)"
-                        className="w-full px-3 py-2 bg-slate-100/50 dark:bg-slate-850/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-450 select-none pointer-events-none"
+                        className="w-full px-3 py-2 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400 select-none pointer-events-none"
                         readOnly
                       />
                     </div>
@@ -832,8 +885,8 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                   {/* Theme Select */}
                   <div className="flex items-center justify-between p-3 border border-slate-200/50 dark:border-slate-800/30 rounded-xl bg-slate-50/50 dark:bg-slate-950/20">
                     <div>
-                      <h4 className="font-bold text-slate-850 dark:text-white">Workspace Color Theme</h4>
-                      <p className="text-[10px] text-slate-450 mt-0.5">Toggle interface backdrop between dark modes and light modes.</p>
+                      <h4 className="font-bold text-slate-800 dark:text-white">Workspace Color Theme</h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Toggle interface backdrop between dark modes and light modes.</p>
                     </div>
                     <button
                       onClick={toggleTheme}
@@ -851,7 +904,7 @@ const DashboardPage = ({ onNavigateToLanding }) => {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 border border-rose-200/50 dark:border-rose-900/10 rounded-xl bg-rose-50/25 dark:bg-rose-950/5 mt-4 animate-fade-in">
                     <div>
                       <h4 className="font-bold text-rose-800 dark:text-rose-400">Reset Practice Account</h4>
-                      <p className="text-[10px] text-slate-450 mt-0.5">Delete all stock asset holdings and reset virtual balance back to $100,000.00.</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Delete all stock asset holdings and reset virtual balance back to $100,000.00.</p>
                     </div>
                     <button
                       onClick={resetDemo}
@@ -910,6 +963,12 @@ const DashboardPage = ({ onNavigateToLanding }) => {
           </div>
         </div>
       )}
+
+      {/* 3. Add Funds Visual Modal */}
+      <AddFundsModal 
+        isOpen={isAddFundsOpen}
+        onClose={() => setIsAddFundsOpen(false)}
+      />
 
     </div>
   );

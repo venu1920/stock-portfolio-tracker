@@ -132,6 +132,7 @@ def add_stock(user):
     buy_price = data.get('buy_price')
     current_price = data.get('current_price')
     purchase_date = data.get('purchase_date')
+    is_real = data.get('is_real', False)
 
     # Frontend validation rules mirrors
     if not symbol or len(symbol) > 10:
@@ -161,8 +162,12 @@ def add_stock(user):
         return jsonify({'error': 'Current price must be a numeric value greater than 0.'}), 400
 
     total_investment = round(quantity * buy_price, 2)
-    if user.demo_balance < total_investment:
-        return jsonify({'error': f'Insufficient practice cash! Needed: ${total_investment:,.2f}, Available: ${user.demo_balance:,.2f}'}), 400
+    if is_real:
+        if user.real_balance < total_investment:
+            return jsonify({'error': f'Insufficient real cash! Needed: ${total_investment:,.2f}, Available: ${user.real_balance:,.2f}'}), 400
+    else:
+        if user.demo_balance < total_investment:
+            return jsonify({'error': f'Insufficient practice cash! Needed: ${total_investment:,.2f}, Available: ${user.demo_balance:,.2f}'}), 400
 
     if not purchase_date:
         from datetime import datetime
@@ -176,9 +181,13 @@ def add_stock(user):
             quantity=quantity,
             buy_price=buy_price,
             current_price=current_price,
-            purchase_date=purchase_date
+            purchase_date=purchase_date,
+            is_real=is_real
         )
-        user.demo_balance = round(user.demo_balance - total_investment, 2)
+        if is_real:
+            user.real_balance = round(user.real_balance - total_investment, 2)
+        else:
+            user.demo_balance = round(user.demo_balance - total_investment, 2)
         db.session.add(new_stock)
         db.session.commit()
         return jsonify({
@@ -217,8 +226,12 @@ def update_stock(user, stock_id):
     new_investment = round(new_quantity * new_buy_price, 2)
     diff = round(new_investment - orig_investment, 2)
 
-    if diff > 0 and user.demo_balance < diff:
-        return jsonify({'error': f'Insufficient practice cash to increase position! Needed: ${diff:,.2f}, Available: ${user.demo_balance:,.2f}'}), 400
+    if stock.is_real:
+        if diff > 0 and user.real_balance < diff:
+            return jsonify({'error': f'Insufficient real cash to increase position! Needed: ${diff:,.2f}, Available: ${user.real_balance:,.2f}'}), 400
+    else:
+        if diff > 0 and user.demo_balance < diff:
+            return jsonify({'error': f'Insufficient practice cash to increase position! Needed: ${diff:,.2f}, Available: ${user.demo_balance:,.2f}'}), 400
 
     if symbol:
         if len(symbol) > 10:
@@ -247,7 +260,10 @@ def update_stock(user, stock_id):
         stock.purchase_date = purchase_date
 
     try:
-        user.demo_balance = round(user.demo_balance - diff, 2)
+        if stock.is_real:
+            user.real_balance = round(user.real_balance - diff, 2)
+        else:
+            user.demo_balance = round(user.demo_balance - diff, 2)
         db.session.commit()
         return jsonify({
             'stock': stock.to_dict(),
@@ -266,7 +282,10 @@ def delete_stock(user, stock_id):
         
     try:
         sale_value = stock.current_value
-        user.demo_balance = round(user.demo_balance + sale_value, 2)
+        if stock.is_real:
+            user.real_balance = round(user.real_balance + sale_value, 2)
+        else:
+            user.demo_balance = round(user.demo_balance + sale_value, 2)
         db.session.delete(stock)
         db.session.commit()
         return jsonify({
@@ -281,8 +300,8 @@ def delete_stock(user, stock_id):
 @login_required
 def reset_demo(user):
     try:
-        # Delete all stocks for this user
-        Stock.query.filter_by(user_id=user.id).delete()
+        # Delete only practice stocks for this user
+        Stock.query.filter_by(user_id=user.id, is_real=False).delete()
         user.demo_balance = 100000.0
         db.session.commit()
         return jsonify({
@@ -292,6 +311,34 @@ def reset_demo(user):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': f'Failed to reset demo: {str(e)}'}), 500
+
+@app.route('/api/auth/add-funds', methods=['POST'])
+@login_required
+def add_funds(user):
+    data = request.get_json() or {}
+    amount = data.get('amount')
+    payment_method = data.get('payment_method', '').strip()
+    
+    try:
+        amount = float(amount)
+        if amount <= 0:
+            raise ValueError()
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Amount must be a positive number.'}), 400
+        
+    if not payment_method:
+        return jsonify({'error': 'Payment method is required.'}), 400
+        
+    try:
+        user.real_balance = round(user.real_balance + amount, 2)
+        db.session.commit()
+        return jsonify({
+            'message': f'Successfully added ${amount:,.2f} via {payment_method.upper()} to your wallet!',
+            'user': user.to_dict()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to add funds: {str(e)}'}), 500
 
 # --- WATCHLIST ROUTES ---
 
@@ -359,7 +406,8 @@ def delete_watchlist_item(user, item_id):
 @app.route('/api/stocks/export/csv', methods=['GET'])
 @login_required
 def export_csv(user):
-    stocks = Stock.query.filter_by(user_id=user.id).all()
+    is_real = request.args.get('is_real', 'false').lower() == 'true'
+    stocks = Stock.query.filter_by(user_id=user.id, is_real=is_real).all()
     
     output = io.StringIO()
     writer = csv.writer(output)
@@ -396,7 +444,8 @@ def export_csv(user):
 @app.route('/api/stocks/export/pdf', methods=['GET'])
 @login_required
 def export_pdf(user):
-    stocks = Stock.query.filter_by(user_id=user.id).all()
+    is_real = request.args.get('is_real', 'false').lower() == 'true'
+    stocks = Stock.query.filter_by(user_id=user.id, is_real=is_real).all()
     
     # Calculate overall summary metrics
     total_inv = sum(s.total_investment for s in stocks)

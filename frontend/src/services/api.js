@@ -44,6 +44,10 @@ export const authService = {
   resetDemo: async () => {
     const response = await API.post('/auth/reset-demo');
     return response.data;
+  },
+  addFunds: async (amount, payment_method) => {
+    const response = await API.post('/auth/add-funds', { amount, payment_method });
+    return response.data;
   }
 };
 
@@ -68,9 +72,9 @@ export const stockService = {
     const response = await API.post('/stocks/simulate-tick');
     return response.data;
   },
-  downloadCSV: () => {
+  downloadCSV: (isReal = false) => {
     const token = localStorage.getItem('token');
-    const url = `${API.defaults.baseURL}/stocks/export/csv`;
+    const url = `${API.defaults.baseURL}/stocks/export/csv?is_real=${isReal}`;
     // Standard fetch + download to properly send headers
     return fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -86,9 +90,9 @@ export const stockService = {
       link.parentNode.removeChild(link);
     });
   },
-  downloadPDF: () => {
+  downloadPDF: (isReal = false) => {
     const token = localStorage.getItem('token');
-    const url = `${API.defaults.baseURL}/stocks/export/pdf`;
+    const url = `${API.defaults.baseURL}/stocks/export/pdf?is_real=${isReal}`;
     return fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` }
     })

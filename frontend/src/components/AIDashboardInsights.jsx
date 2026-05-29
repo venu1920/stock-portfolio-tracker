@@ -3,10 +3,14 @@ import { usePortfolio } from '../context/PortfolioContext';
 import { Sparkles, AlertCircle, TrendingUp, HelpCircle } from 'lucide-react';
 
 const AIDashboardInsights = () => {
-  const { stocks } = usePortfolio();
+  const { stocks, activeMode } = usePortfolio();
+
+  const filteredStocks = useMemo(() => {
+    return stocks.filter(s => s.is_real === (activeMode === 'real'));
+  }, [stocks, activeMode]);
 
   const insights = useMemo(() => {
-    if (stocks.length === 0) {
+    if (filteredStocks.length === 0) {
       return [
         {
           id: 'empty',
@@ -20,23 +24,23 @@ const AIDashboardInsights = () => {
     const list = [];
     
     // Calculate total values
-    const totalInv = stocks.reduce((sum, s) => sum + s.total_investment, 0);
-    const totalVal = stocks.reduce((sum, s) => sum + s.current_value, 0);
+    const totalInv = filteredStocks.reduce((sum, s) => sum + s.total_investment, 0);
+    const totalVal = filteredStocks.reduce((sum, s) => sum + s.current_value, 0);
     const totalPL = totalVal - totalInv;
     const plPercentage = totalInv > 0 ? (totalPL / totalInv) * 100 : 0;
 
     // Rule 1: Diversification Check (Number of assets)
-    if (stocks.length < 3) {
+    if (filteredStocks.length < 3) {
       list.push({
         id: 'diversification-count',
         type: 'warning',
         title: 'Low Asset Diversity',
-        message: `You hold only ${stocks.length} asset${stocks.length === 1 ? '' : 's'}. Consider expanding to 4-5 different sectors (e.g. Energy, Healthcare, Tech) to reduce volatility.`
+        message: `You hold only ${filteredStocks.length} asset${filteredStocks.length === 1 ? '' : 's'}. Consider expanding to 4-5 different sectors (e.g. Energy, Healthcare, Tech) to reduce volatility.`
       });
     }
 
     // Rule 2: Concentration Check (Single stock representing > 40%)
-    stocks.forEach((s) => {
+    filteredStocks.forEach((s) => {
       const concentration = totalVal > 0 ? (s.current_value / totalVal) * 100 : 0;
       if (concentration > 40) {
         list.push({
@@ -49,7 +53,7 @@ const AIDashboardInsights = () => {
     });
 
     // Rule 3: Profit Taker Suggestion
-    stocks.forEach((s) => {
+    filteredStocks.forEach((s) => {
       if (s.profit_loss_percentage > 20) {
         list.push({
           id: `profit-take-${s.id}`,
@@ -61,7 +65,7 @@ const AIDashboardInsights = () => {
     });
 
     // Rule 4: Stop Loss / Risk Warning
-    stocks.forEach((s) => {
+    filteredStocks.forEach((s) => {
       if (s.profit_loss_percentage < -15) {
         list.push({
           id: `risk-warn-${s.id}`,
@@ -94,7 +98,7 @@ const AIDashboardInsights = () => {
     }
 
     return list;
-  }, [stocks]);
+  }, [filteredStocks]);
 
   return (
     <div className="glass-panel p-5 border border-indigo-500/10 dark:border-indigo-500/20 relative overflow-hidden bg-gradient-to-tr from-indigo-50/50 via-white/70 to-purple-50/50 dark:from-indigo-950/20 dark:via-slate-900/70 dark:to-purple-950/15">
@@ -117,9 +121,9 @@ const AIDashboardInsights = () => {
       {/* Suggestion List */}
       <div className="space-y-3.5 max-h-[280px] overflow-y-auto pr-1">
         {insights.map((item) => {
-          let alertBorder = 'border-slate-100 dark:border-slate-800 bg-white/60 dark:bg-slate-905/40';
+          let alertBorder = 'border-slate-100 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40';
           let bulletColor = 'bg-blue-500';
-          let textColor = 'text-slate-650 dark:text-slate-350';
+          let textColor = 'text-slate-600 dark:text-slate-300';
 
           if (item.type === 'warning') {
             alertBorder = 'border-amber-200/50 dark:border-amber-800/10 bg-amber-50/40 dark:bg-amber-950/10';

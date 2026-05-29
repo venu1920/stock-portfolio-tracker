@@ -98,7 +98,7 @@ const LandingPage = ({ onNavigateToDashboard }) => {
 
               {user ? (
                 <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-slate-605 dark:text-slate-305">
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                     Hi, <strong className="text-slate-800 dark:text-white font-semibold">{user.username}</strong>
                   </span>
                   <button onClick={onNavigateToDashboard} className="btn-primary text-sm flex items-center gap-1.5 py-2">
@@ -127,13 +127,13 @@ const LandingPage = ({ onNavigateToDashboard }) => {
             <div className="md:hidden flex items-center gap-3">
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-lg border border-slate-250 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 {theme === 'dark' ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
               </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-lg border border-slate-250 dark:border-slate-800 text-slate-605 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -144,7 +144,7 @@ const LandingPage = ({ onNavigateToDashboard }) => {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden px-4 pt-2 pb-6 space-y-3 bg-white/95 dark:bg-slate-900/95 border-b border-slate-205 dark:border-slate-805 backdrop-blur-lg">
+          <div className="md:hidden px-4 pt-2 pb-6 space-y-3 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 backdrop-blur-lg">
             <a 
               href="#features" 
               onClick={() => setMobileMenuOpen(false)}
@@ -206,7 +206,7 @@ const LandingPage = ({ onNavigateToDashboard }) => {
             <span className="gradient-text">Empower Investments</span>
           </h1>
           
-          <p className="text-base sm:text-lg text-slate-505 dark:text-slate-400 max-w-xl mx-auto lg:mx-0">
+          <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 max-w-xl mx-auto lg:mx-0">
             A premium dashboard to monitor stock assets, compute real-time profit and loss ratios, map growth curves, and export professional reports.
           </p>
 
@@ -252,7 +252,7 @@ const LandingPage = ({ onNavigateToDashboard }) => {
               <div className="p-3 bg-white/80 dark:bg-slate-900/80 rounded-xl border border-slate-200/50 dark:border-slate-800/30">
                 <p className="text-[10px] uppercase font-bold text-slate-400">Total Profit / Loss</p>
                 <p className="text-lg font-bold text-emerald-600 mt-1">+$5,124.00</p>
-                <span className="text-[10px] text-slate-450 dark:text-slate-500">From 8 holdings</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">From 8 holdings</span>
               </div>
             </div>
 
@@ -264,7 +264,7 @@ const LandingPage = ({ onNavigateToDashboard }) => {
                 return (
                   <div 
                     key={ticker}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white/60 dark:bg-slate-905/60 border border-slate-150 dark:border-slate-805 hover:bg-white/80 dark:hover:bg-slate-900/80 transition-all duration-300"
+                    className="flex items-center justify-between p-3 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 hover:bg-white/80 dark:hover:bg-slate-900/80 transition-all duration-300"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center font-bold text-indigo-600 text-xs">
@@ -280,7 +280,7 @@ const LandingPage = ({ onNavigateToDashboard }) => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-slate-805 dark:text-white">${info.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">${info.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                       <span className={`text-xs font-semibold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {isPositive ? '+' : ''}{info.change}%
                       </span>
@@ -375,7 +375,7 @@ const LandingPage = ({ onNavigateToDashboard }) => {
           <h2 className="text-3xl font-bold font-sans text-slate-900 dark:text-white">
             Built as a Premium Full-Stack Portfolio Showcase
           </h2>
-          <p className="text-slate-505 dark:text-slate-400 leading-relaxed">
+          <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
             This project showcases professional full-stack development skills. Combining the speed of a Vite React layout with the security of a Python Flask sqlite server, it models core features expected of modern financial technology.
           </p>
           <div className="grid grid-cols-2 gap-4">
@@ -423,7 +423,7 @@ const LandingPage = ({ onNavigateToDashboard }) => {
       </section>
 
       {/* 5. FOOTER */}
-      <footer className="mt-auto border-t border-slate-200/50 dark:border-slate-850 bg-white/40 dark:bg-slate-900/40 py-8 transition-colors">
+      <footer className="mt-auto border-t border-slate-200/50 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 py-8 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">α</div>

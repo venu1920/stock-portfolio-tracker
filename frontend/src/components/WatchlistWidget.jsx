@@ -3,7 +3,7 @@ import { usePortfolio } from '../context/PortfolioContext';
 import { Plus, Trash2, TrendingUp, TrendingDown, Star } from 'lucide-react';
 
 const WatchlistWidget = () => {
-  const { watchlist, addToWatchlist, deleteFromWatchlist, stocks } = usePortfolio();
+  const { watchlist, addToWatchlist, deleteFromWatchlist, stocks, activeMode } = usePortfolio();
   const [symbol, setSymbol] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState('');
@@ -69,7 +69,7 @@ const WatchlistWidget = () => {
       <div className="flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
         <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
         <div>
-          <h3 className="font-extrabold text-sm text-slate-850 dark:text-white">Watchlist</h3>
+          <h3 className="font-extrabold text-sm text-slate-800 dark:text-white">Watchlist</h3>
           <p className="text-[10px] text-slate-500">Monitor stocks before building active holdings</p>
         </div>
       </div>
@@ -77,7 +77,7 @@ const WatchlistWidget = () => {
       {/* Form to Add Custom Stock to Watchlist */}
       <form onSubmit={handleAddCustom} className="space-y-2 mb-4">
         {error && (
-          <p className="text-[10px] font-semibold text-rose-500 bg-rose-550/10 p-2 rounded-lg border border-rose-500/20">{error}</p>
+          <p className="text-[10px] font-semibold text-rose-500 bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">{error}</p>
         )}
         <div className="grid grid-cols-2 gap-2">
           <input
@@ -86,7 +86,7 @@ const WatchlistWidget = () => {
             value={symbol}
             onChange={(e) => setSymbol(e.target.value.toUpperCase())}
             maxLength={10}
-            className="px-3 py-1.5 bg-slate-100/50 dark:bg-slate-850/50 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-lg text-xs dark:text-white uppercase focus:outline-none"
+            className="px-3 py-1.5 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-lg text-xs dark:text-white uppercase focus:outline-none"
             required
           />
           <input
@@ -94,7 +94,7 @@ const WatchlistWidget = () => {
             placeholder="Company Name"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
-            className="px-3 py-1.5 bg-slate-100/50 dark:bg-slate-850/50 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-lg text-xs dark:text-white focus:outline-none"
+            className="px-3 py-1.5 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-lg text-xs dark:text-white focus:outline-none"
             required
           />
         </div>
@@ -118,7 +118,7 @@ const WatchlistWidget = () => {
                 <button
                   key={p.symbol}
                   onClick={() => handleAddPreset(p)}
-                  className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/40 text-slate-700 dark:text-slate-350 border border-slate-200 dark:border-slate-700/50 flex items-center gap-1 transition-colors"
+                  className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/50 flex items-center gap-1 transition-colors"
                 >
                   +{p.symbol}
                 </button>
@@ -136,8 +136,8 @@ const WatchlistWidget = () => {
           </div>
         ) : (
           watchlist.map((item) => {
-            // Match with active stock holdings if symbol matches
-            const matchingStock = stocks.find(s => s.stock_symbol === item.stock_symbol);
+            // Match with active stock holdings if symbol matches and is in active mode
+            const matchingStock = stocks.find(s => s.stock_symbol === item.stock_symbol && s.is_real === (activeMode === 'real'));
             // Simulate a price movement (e.g. current price is matching stock price or calculated mock current)
             const currentPrice = matchingStock ? matchingStock.current_price : item.added_price * 1.02; // Mock shift
             const pctChange = item.added_price ? ((currentPrice - item.added_price) / item.added_price) * 100 : 0;
@@ -146,7 +146,7 @@ const WatchlistWidget = () => {
             return (
               <div 
                 key={item.id}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-white/60 dark:bg-slate-905/60 border border-slate-150 dark:border-slate-805 hover:bg-white/80 dark:hover:bg-slate-900/80 transition-colors group"
+                className="flex items-center justify-between p-2.5 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 hover:bg-white/80 dark:hover:bg-slate-900/80 transition-colors group"
               >
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center font-extrabold text-[10px] text-indigo-600 dark:text-indigo-400">
@@ -176,7 +176,7 @@ const WatchlistWidget = () => {
                   
                   <button
                     onClick={() => deleteFromWatchlist(item.id, item.stock_symbol)}
-                    className="p-1.5 rounded-lg border border-transparent hover:border-slate-205 dark:hover:border-slate-805 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100"
+                    className="p-1.5 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100"
                     title="Remove"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

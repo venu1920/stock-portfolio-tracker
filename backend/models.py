@@ -11,6 +11,7 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(120), nullable=False)
     demo_balance = db.Column(db.Float, nullable=False, default=100000.0)
+    real_balance = db.Column(db.Float, nullable=False, default=0.0)
     
     # Relationships
     stocks = db.relationship('Stock', backref='user', lazy=True, cascade="all, delete-orphan")
@@ -26,7 +27,8 @@ class User(db.Model):
         return {
             'id': self.id,
             'username': self.username,
-            'demo_balance': round(self.demo_balance, 2)
+            'demo_balance': round(self.demo_balance, 2),
+            'real_balance': round(self.real_balance, 2)
         }
 
 class Stock(db.Model):
@@ -40,6 +42,7 @@ class Stock(db.Model):
     buy_price = db.Column(db.Float, nullable=False)
     current_price = db.Column(db.Float, nullable=False)
     purchase_date = db.Column(db.String(50), nullable=False, default=lambda: datetime.utcnow().strftime('%Y-%m-%d'))
+    is_real = db.Column(db.Boolean, nullable=False, default=False)
 
     @property
     def total_investment(self):
@@ -72,7 +75,8 @@ class Stock(db.Model):
             'total_investment': self.total_investment,
             'current_value': self.current_value,
             'profit_loss': self.profit_loss,
-            'profit_loss_percentage': self.profit_loss_percentage
+            'profit_loss_percentage': self.profit_loss_percentage,
+            'is_real': self.is_real
         }
 
 class WatchlistItem(db.Model):
